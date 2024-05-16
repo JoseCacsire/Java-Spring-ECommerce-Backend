@@ -44,6 +44,7 @@ public class SecurityConfig {
                     http.requestMatchers("/api/users/**").permitAll();
                     // Cofnigurar los endpoints privados
                     http.requestMatchers(HttpMethod.POST,"/api/categorias/**").hasRole("ADMIN");
+                    http.requestMatchers(HttpMethod.POST,"/api/ordenes/**").hasRole("ADMIN");
                         // Configurar el resto de endpoint - NO ESPECIFICADOS
                     http.anyRequest().denyAll();
                 })

@@ -2,16 +2,12 @@ package ecommerce.controller;
 
 import ecommerce.dto.categoria.CategoriaRequestDTO;
 import ecommerce.dto.categoria.CategoriaResponseDTO;
-import ecommerce.model.Categoria;
 import ecommerce.service.CategoriaService;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
