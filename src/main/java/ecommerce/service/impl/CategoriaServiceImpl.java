@@ -9,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +21,6 @@ import static java.util.Arrays.stream;
 public class CategoriaServiceImpl implements CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
-
 
     @Override
     public List<CategoriaResponseDTO> findAll() {
@@ -38,35 +38,23 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public Categoria findById2(Long id) {
-        return categoriaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No hay reservaciones con ese id en la base de datos"));
-    }
-
-
-    @Override
+    @Transactional
     public CategoriaResponseDTO save(CategoriaRequestDTO categoriaRequestDTO) {
-        try {
             Categoria categoria = Categoria.builder()
                     .nombre(categoriaRequestDTO.nombre())
                     .build();
             Categoria entitySaved = categoriaRepository.save(categoria);
             return new CategoriaResponseDTO(entitySaved);
-        } catch (Exception e) {
-            throw new ServiceException("Error occurred while saving Categoria", e);
-        }
     }
 
     @Override
+    @Transactional
     public CategoriaResponseDTO update(Long id, CategoriaRequestDTO categoriaRequestDTO) {
-        try {
-            Categoria categoria = Categoria.builder()
-                    .nombre(categoriaRequestDTO.nombre())
-                    .build();
+            Categoria categoria = categoriaRepository.findById(id)
+                    .orElseThrow(()->new EntityNotFoundException("Categoria con id "+id+" no encontrado"));
+            categoria.setNombre(categoriaRequestDTO.nombre());
             Categoria entitySaved = categoriaRepository.save(categoria);
             return new CategoriaResponseDTO(entitySaved);
-        } catch (Exception e) {
-            throw new ServiceException("Categoria con id " + categoriaRequestDTO.nombre() + " no encontrado");
-        }
     }
 
     @Override

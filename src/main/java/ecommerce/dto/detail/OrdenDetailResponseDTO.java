@@ -9,7 +9,7 @@ public record OrdenDetailResponseDTO(
         Integer cantidad,
         Double precio,
         Double subtotal,
-        String producto,
+        String nombreProducto,
 
         String imagen,
         Long ordenId

@@ -46,10 +46,20 @@ public class UserServiceImpl  implements UserEntityService {
     @Override
     @Transactional
     public CreateUserDTO createUser(CreateUserDTO createUserDTO) {
-        RoleEntity rol = new RoleEntity();
-        rol.setName(Role.CLIENTE);
-        Set<RoleEntity> roles =new HashSet<>();
-        roles.add(rol);
+
+        // Buscar el rol "CLIENTE"
+        RoleEntity clienteRole = roleRepository.findByName(Role.CLIENTE);
+
+        // Si no se encuentra el rol, crearlo
+        if (clienteRole == null) {
+            clienteRole = RoleEntity.builder()
+                    .name(Role.CLIENTE)
+                    .build();
+        }
+        // Crear el conjunto de roles para el usuario
+        Set<RoleEntity> roles = new HashSet<>();
+        roles.add(clienteRole);
+
         UserEntity userEntity = UserEntity.builder()
                 .email(createUserDTO.email())
                 .username(createUserDTO.username())
@@ -58,8 +68,9 @@ public class UserServiceImpl  implements UserEntityService {
                 .estado(true)
                 .build();
 
+        log.info("Saving user entity: {}", userEntity);
         userRepository.save(userEntity);
-
+        log.info("User entity saved with ID: {}", userEntity.getId());
         return new CreateUserDTO(userEntity.getUsername(), userEntity.getEmail(), userEntity.getPassword());
 
     }
@@ -82,7 +93,7 @@ public class UserServiceImpl  implements UserEntityService {
 
     public Authentication authenticate(String username, String password) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
+        log.error("user: "+userDetails);
         if (userDetails == null) {
             throw new BadCredentialsException(String.format("Invalid username or password"));
         }

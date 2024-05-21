@@ -2,6 +2,7 @@ package ecommerce.service.impl;
 
 import ecommerce.model.UserEntity;
 import ecommerce.repository.UserEntityRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,11 +15,11 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class UserDetailServiceImpl implements UserDetailsService {
 
-    @Autowired
-    private UserEntityRepository userEntityRepository;
+    private final UserEntityRepository userEntityRepository;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
@@ -33,7 +34,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
         return new User(userEntity.getUsername(),
                 userEntity.getPassword(),
                 userEntity.getEstado(),
-                true,
+                    true,
                 true,
                 true,
                 authorities);

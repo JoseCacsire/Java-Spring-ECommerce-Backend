@@ -14,6 +14,5 @@ public interface CategoriaService {
     CategoriaResponseDTO update(Long id, CategoriaRequestDTO categoriaRequestDTO);
     void delete(Long id);
 
-    Categoria findById2(Long id);
 
 }

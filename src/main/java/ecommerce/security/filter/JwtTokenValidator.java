@@ -50,7 +50,7 @@ public class JwtTokenValidator extends OncePerRequestFilter {
             String username = jwtUtils.extractUsername(decodedJWT);
             log.info("PEPE"+username);
             UserDetails userDetails = userDetailService.loadUserByUsername(username);
-
+            log.info("Rol"+userDetails.getAuthorities().toString());
 
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             Authentication authenticationToken = new UsernamePasswordAuthenticationToken(username, null,userDetails.getAuthorities());

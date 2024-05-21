@@ -14,5 +14,4 @@ public interface ProductoService {
     ProductoResponseDTO update(Long id, ProductoRequestDTO productoRequestDTO);
     void delete(Long id);
 
-    Producto findById2(Long id);
 }

@@ -1,23 +1,22 @@
 package ecommerce.controller;
 
-
 import ecommerce.dto.orden.OrdenRequestDTO;
 import ecommerce.dto.orden.OrdenResponseDTO;
-import ecommerce.model.OrdenDetail;
 import ecommerce.service.OrdenService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/ordenes")
 public class OrdenController {
 
-    @Autowired
-    private OrdenService ordenService;
+    private final OrdenService ordenService;
+
 
     // Endpoint para obtener todas las órdenes
     @GetMapping
@@ -25,6 +24,13 @@ public class OrdenController {
         List<OrdenResponseDTO> ordenes = ordenService.findAll();
         return ResponseEntity.ok(ordenes);
     }
+
+    @GetMapping("/estado/{estado}")
+    public ResponseEntity<List<OrdenResponseDTO>> getOrdenesByEstado(@PathVariable String estado){
+        List<OrdenResponseDTO> ordenesByEstado = ordenService.findByEstado(estado);
+        return ResponseEntity.ok(ordenesByEstado);
+    }
+
 
     // Endpoint para obtener una orden por su ID
     @GetMapping("/{id}")
@@ -34,21 +40,26 @@ public class OrdenController {
     }
 
     // Endpoint para crear una nueva orden
-    @PostMapping
-    public ResponseEntity<OrdenResponseDTO> createOrden(@RequestBody OrdenRequestDTO ordenRequestDTO) {
-        OrdenResponseDTO nuevaOrden = ordenService.save(ordenRequestDTO);
-        return new ResponseEntity<>(nuevaOrden, HttpStatus.CREATED);
+    @PostMapping("/crear")
+    public ResponseEntity<?> createOrden(@RequestBody OrdenRequestDTO ordenRequestDTO) {
+        try{
+            OrdenResponseDTO nuevaOrden = ordenService.createOrden(ordenRequestDTO);
+            return new ResponseEntity<>(nuevaOrden, HttpStatus.CREATED);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Endpoint para actualizar un detalle de una orden
-    @PutMapping("/{orderId}/detalles/{detailId}")
-    public ResponseEntity<OrdenResponseDTO> updateOrdenDetail(
-            @PathVariable Long orderId,
-            @PathVariable Long detailId,
-            @RequestBody OrdenDetail updatedDetail
-    ) {
-        OrdenResponseDTO ordenActualizada = ordenService.updateDetail(orderId, detailId, updatedDetail);
-        return ResponseEntity.ok(ordenActualizada);
+    @PatchMapping("/realizar/{id}")
+    public ResponseEntity<?>  realizarOrden(@PathVariable Long id){
+        try {
+            OrdenResponseDTO ordenRealizada = ordenService.realizarOrden(id);
+            return new ResponseEntity<>(ordenRealizada,HttpStatus.OK);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
+
+
 
 }

@@ -40,6 +40,7 @@ public class JwtUtils {
                 .withJWTId(UUID.randomUUID().toString())
                 .withNotBefore(new Date(System.currentTimeMillis()))
                 .sign(algorithm);
+
         return jwtToken;
     }
 

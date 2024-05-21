@@ -4,25 +4,27 @@ import ecommerce.dto.producto.ProductoRequestDTO;
 import ecommerce.dto.producto.ProductoResponseDTO;
 import ecommerce.model.Categoria;
 import ecommerce.model.Producto;
+import ecommerce.repository.CategoriaRepository;
 import ecommerce.repository.ProductoRepository;
 import ecommerce.service.CategoriaService;
 import ecommerce.service.ProductoService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class ProductServiceImpl implements ProductoService {
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    private final ProductoRepository productoRepository;
 
-    @Autowired
-    private CategoriaServiceImpl categoriaService;
+    private final CategoriaRepository categoriaRepository;
 
     @Override
     public List<ProductoResponseDTO> findAll() {
@@ -40,46 +42,47 @@ public class ProductServiceImpl implements ProductoService {
     }
 
     @Override
+    @Transactional
     public ProductoResponseDTO save(ProductoRequestDTO productoRequestDTO) {
-        Categoria categoria = categoriaService.findById2(productoRequestDTO.categoriaId());
-        try {
-            Producto producto = Producto.builder()
-                    .nombre(productoRequestDTO.nombre())
-                    .descripcion(productoRequestDTO.descripcion())
-                    .precio(productoRequestDTO.precio())
-                    .precioCompra(productoRequestDTO.precioCompra())
-                    .stock(productoRequestDTO.stock())
-                    .imagen(productoRequestDTO.imagen())
-                    .categoria(categoria)
-                    .build();
-            Producto entitySaved = productoRepository.save(producto);
-            return new ProductoResponseDTO(entitySaved);
-        } catch (Exception e) {
-            throw new ServiceException("Error occurred while saving Producto", e);
-        }
+        Categoria categoria = categoriaRepository.findById(productoRequestDTO.categoriaId())
+                .orElseThrow(() -> new EntityNotFoundException("Categoria con id " + productoRequestDTO.categoriaId() + " no encontrado"));
+//      Pasando los valores para despues guardar
+        Producto producto = Producto.builder()
+                .nombre(productoRequestDTO.nombre())
+                .descripcion(productoRequestDTO.descripcion())
+                .precio(productoRequestDTO.precio())
+                .precioCompra(productoRequestDTO.precioCompra())
+                .stock(productoRequestDTO.stock())
+                .imagen(productoRequestDTO.imagen())
+                .categoria(categoria)
+                .build();
+        Producto entitySaved = productoRepository.save(producto);
+        return new ProductoResponseDTO(entitySaved);
     }
 
 
 
     @Override
+    @Transactional
     public ProductoResponseDTO update(Long id, ProductoRequestDTO productoRequestDTO) {
-        Categoria categoria = categoriaService.findById2(productoRequestDTO.categoriaId());
-        try {
-            Producto producto = Producto.builder()
-                    .id(id)
-                    .nombre(productoRequestDTO.nombre())
-                    .descripcion(productoRequestDTO.descripcion())
-                    .precio(productoRequestDTO.precio())
-                    .precioCompra(productoRequestDTO.precioCompra())
-                    .stock(productoRequestDTO.stock())
-                    .imagen(productoRequestDTO.imagen())
-                    .categoria(categoria)
-                    .build();
-            Producto entitySaved = productoRepository.save(producto);
-            return new ProductoResponseDTO(entitySaved);
-        } catch (Exception e) {
-            throw new ServiceException("Error occurred while saving Producto", e);
-        }
+        Categoria categoria = categoriaRepository.findById(productoRequestDTO.categoriaId())
+                .orElseThrow(() -> new EntityNotFoundException("Categoria con id " + id + " no encontrado"));
+        // Buscar el producto existente por su ID
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Producto con id " + id + " no encontrado"));
+
+        // Actualizar los campos del producto existente
+        producto.setNombre(productoRequestDTO.nombre());
+        producto.setDescripcion(productoRequestDTO.descripcion());
+        producto.setPrecio(productoRequestDTO.precio());
+        producto.setPrecioCompra(productoRequestDTO.precioCompra());
+        producto.setStock(productoRequestDTO.stock());
+        producto.setImagen(productoRequestDTO.imagen());
+        producto.setCategoria(categoria);
+
+        Producto entitySaved = productoRepository.save(producto);
+
+        return new ProductoResponseDTO(entitySaved);
     }
 
     @Override
@@ -87,9 +90,4 @@ public class ProductServiceImpl implements ProductoService {
         productoRepository.deleteById(id);
     }
 
-    @Override
-    public Producto findById2(Long id) {
-        return productoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("There is no reservation with that id in the database"));
-    }
 }

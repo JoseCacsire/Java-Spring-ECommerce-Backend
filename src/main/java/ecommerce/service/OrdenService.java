@@ -2,10 +2,6 @@ package ecommerce.service;
 
 import ecommerce.dto.orden.OrdenRequestDTO;
 import ecommerce.dto.orden.OrdenResponseDTO;
-import ecommerce.dto.producto.ProductoRequestDTO;
-import ecommerce.dto.producto.ProductoResponseDTO;
-import ecommerce.model.OrdenDetail;
-import ecommerce.model.Producto;
 
 import java.util.List;
 
@@ -13,9 +9,12 @@ public interface OrdenService {
 
     List<OrdenResponseDTO> findAll();
     OrdenResponseDTO findById(Long id);
-    OrdenResponseDTO save(OrdenRequestDTO ordenRequestDTODTO);
-    OrdenResponseDTO updateDetail(Long orderId, Long detailId, OrdenDetail updatedDetail);
+    OrdenResponseDTO createOrden(OrdenRequestDTO ordenRequestDTODTO);
+
+    OrdenResponseDTO realizarOrden(Long id);
+//    OrdenResponseDTO updateDetail(Long orderId, Long detailId, OrdenDetailUpdateRequest updatedRequest);
     void delete(Long id);
 
+    List<OrdenResponseDTO> findByEstado(String estado);
 
 }

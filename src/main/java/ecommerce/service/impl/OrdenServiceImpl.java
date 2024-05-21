@@ -1,6 +1,7 @@
 package ecommerce.service.impl;
 
 import ecommerce.dto.detail.OrdenDetailRequestDTO;
+import ecommerce.dto.detail.OrdenDetailUpdateRequest;
 import ecommerce.dto.orden.OrdenRequestDTO;
 import ecommerce.dto.orden.OrdenResponseDTO;
 import ecommerce.model.*;
@@ -10,14 +11,16 @@ import ecommerce.repository.ProductoRepository;
 import ecommerce.repository.UserEntityRepository;
 import ecommerce.service.OrdenService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 public class OrdenServiceImpl implements OrdenService {
 
@@ -32,6 +35,13 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Autowired
     private UserEntityRepository userEntityRepository;
+
+    @Override
+    public List<OrdenResponseDTO> findByEstado(String estado) {
+        return ordenRepository.findByEstado(estado).stream()
+                .map(OrdenResponseDTO::new)
+                .collect(Collectors.toList());
+    }
 
     @Override
     public List<OrdenResponseDTO> findAll() {
@@ -49,88 +59,90 @@ public class OrdenServiceImpl implements OrdenService {
     }
 
     @Override
-    public OrdenResponseDTO save(OrdenRequestDTO ordenRequestDTO) {
+    public OrdenResponseDTO realizarOrden(Long id) {
+        Orden orden = ordenRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Orden con id " + id + " no encontrado"));
 
-        try {
-            // Buscar al usuario por su ID
-            UserEntity usuario = userEntityRepository.findById(ordenRequestDTO.usuarioId())
-                    .orElseThrow(() -> new ServiceException("Usuario no encontrado con ID: " + ordenRequestDTO.usuarioId()));
+        orden.setEstado("Completado");
+        orden.getOrdenDetailList().forEach(this::actualizarStock);
 
-            Orden orden = new Orden();
-            List<OrdenDetail> ordenDetailList = new ArrayList<>();
-            Double totalOrden = 0.0;
-            for (OrdenDetailRequestDTO detailRequest : ordenRequestDTO.ordenDetailRequestDTOList()) {
-                Producto producto = productoRepository.findById(detailRequest.productoId())
-                        .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+        return new OrdenResponseDTO(ordenRepository.save(orden));
 
-                // Validar que la cantidad y el precio sean positivos
-                if (detailRequest.cantidad() <= 0 || detailRequest.precio() <= 0) {
-                    throw new ServiceException("Cantidad y precio deben ser valores positivos.");
-                }
-
-                OrdenDetail ordenDetail = new OrdenDetail();
-                ordenDetail.setCantidad(detailRequest.cantidad());
-                ordenDetail.setPrecio(detailRequest.precio());
-                ordenDetail.setSubtotal(detailRequest.cantidad() * detailRequest.precio());
-                ordenDetail.setProducto(producto);
-//                ordenDetail.setOrden(orden);
-
-                ordenDetailList.add(ordenDetail);
-
-                // Actualizamos el total de la orden sumando el subtotal de este detalle
-                totalOrden += ordenDetail.getSubtotal();
-            }
-
-            orden.setTotal(totalOrden);// Asignamos el total a la orden
-            orden.setUserEntity(usuario);
-            orden.setOrdenDetailList(ordenDetailList);
-
-            Orden ordenSaved = ordenRepository.save(orden);
-
-            // Ahora que la orden principal está guardada, asignarla a los detalles y guardarlos
-            for (OrdenDetail ordenDetail : ordenDetailList) {
-                ordenDetail.setOrden(ordenSaved);
-                ordenDetalleRepository.save(ordenDetail);
-            }
-
-            return new OrdenResponseDTO(ordenSaved);
-        } catch (Exception e) {
-            throw new ServiceException("Error occurred while saving Orden", e);
-        }
     }
 
+
     @Override
-    public OrdenResponseDTO updateDetail(Long orderId, Long detailId, OrdenDetail updatedDetail) {
+    @Transactional
+    public OrdenResponseDTO createOrden(OrdenRequestDTO ordenRequestDTO) {
+        // Buscar al usuario por su ID
+        UserEntity usuario = userEntityRepository.findById(ordenRequestDTO.usuarioId())
+                .orElseThrow(() -> new ServiceException("Usuario no encontrado con ID: " + ordenRequestDTO.usuarioId()));
 
-        try {
-            // Buscar la orden por su ID
-            Orden orden = ordenRepository.findById(orderId)
-                    .orElseThrow(() -> new EntityNotFoundException("Orden con id " + orderId + " no encontrado"));
+        List<OrdenDetail> ordenDetailList = ordenRequestDTO.ordenDetailRequestDTOList().stream()
+                .map(this::createOrdenDetail)
+                .collect(Collectors.toList());
 
-            // Verificar si el detalle que se quiere actualizar pertenece a esta orden
-            OrdenDetail ordenDetailToUpdate = orden.getOrdenDetailList().stream()
-                    .filter(detail -> detail.getId().equals(detailId))
-                    .findFirst()
-                    .orElseThrow(() -> new EntityNotFoundException("Detalle de orden con id " + detailId + " no encontrado en la orden " + orderId));
+        double totalOrden = ordenDetailList.stream()
+                .mapToDouble(OrdenDetail::getSubtotal)
+                .sum();
 
-            // Actualizar los campos del detalle
-            ordenDetailToUpdate.setCantidad(updatedDetail.getCantidad());
-            ordenDetailToUpdate.setPrecio(updatedDetail.getPrecio());
-            ordenDetailToUpdate.setSubtotal(updatedDetail.getCantidad() * updatedDetail.getPrecio());
+        Orden orden = Orden.builder()
+                .total(totalOrden)
+                .estado("Pendiente")
+                .userEntity(usuario)
+                .ordenDetailList(ordenDetailList)
+                .build();
 
-            // Actualizar el total de la orden
-            double totalOrden = orden.getOrdenDetailList().stream()
-                    .mapToDouble(det -> det.getCantidad() * det.getPrecio())
-                    .sum();
-            orden.setTotal(totalOrden);
+        Orden ordenSaved = ordenRepository.save(orden);
 
-            // Guardar la orden actualizada
-            Orden ordenUpdated = ordenRepository.save(orden);
-            return new OrdenResponseDTO(ordenUpdated);
-        } catch (Exception e) {
-            throw new ServiceException("Error occurred while updating Orden detail", e);
+        ordenDetailList.forEach(ordenDetail -> {
+            ordenDetail.setOrden(ordenSaved);
+            ordenDetalleRepository.save(ordenDetail);
+            //cuando al roden haya sido pagada
+//            this.actualizarStock(ordenDetail);
+        });
+
+        return new OrdenResponseDTO(ordenSaved);
+
+    }
+
+
+
+    private void actualizarStock(OrdenDetail ordenDetail){
+        Producto producto = ordenDetail.getProducto();
+        int cantidadOrdenada = ordenDetail.getCantidad();
+        int stockActual = producto.getStock();
+
+        if (stockActual < cantidadOrdenada){
+            throw new ServiceException("No hay suficiente stock disponible para el producto: " + producto.getNombre());
         }
+        producto.setStock(stockActual - cantidadOrdenada);
+        productoRepository.save(producto);
+    }
 
+
+
+    private OrdenDetail createOrdenDetail(OrdenDetailRequestDTO detailRequest) {
+        Producto producto = productoRepository.findById(detailRequest.productoId())
+                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+
+        validateDetailRequest(detailRequest);
+
+        OrdenDetail ordenDetail = new OrdenDetail();
+        ordenDetail.setCantidad(detailRequest.cantidad());
+        ordenDetail.setPrecio(producto.getPrecio());
+        ordenDetail.setSubtotal(detailRequest.cantidad() * producto.getPrecio());
+        ordenDetail.setProducto(producto);
+
+        return ordenDetail;
+    }
+
+
+
+    private void validateDetailRequest(OrdenDetailRequestDTO detailRequest) {
+        if (detailRequest.cantidad() <= 0) {
+            throw new ServiceException("Cantidad debe ser valor positivo.");
+        }
     }
 
 
@@ -138,4 +150,6 @@ public class OrdenServiceImpl implements OrdenService {
     public void delete(Long id) {
 
     }
+
+
 }

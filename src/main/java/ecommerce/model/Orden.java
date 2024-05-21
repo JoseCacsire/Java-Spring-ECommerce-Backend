@@ -19,7 +19,8 @@ public class Orden {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Double total;
-
+//    Luego q sea un Enum
+    private String estado;
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private UserEntity userEntity;

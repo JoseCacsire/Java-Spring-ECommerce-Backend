@@ -6,6 +6,7 @@ import ecommerce.service.CategoriaService;
 import ecommerce.service.ProductoService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.service.spi.ServiceException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +29,7 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> findById(Long id) {
+    public ResponseEntity<ProductoResponseDTO> findById(@PathVariable Long id) {
         try{
             ProductoResponseDTO producto = productoService.findById(id);
             return ResponseEntity.ok(producto);
@@ -42,29 +43,30 @@ public class ProductoController {
         try{
             ProductoResponseDTO productoResponseDTO = productoService.save(productoRequestDTO);
             return ResponseEntity.ok(productoResponseDTO);
-        } catch (ServiceException e) {
-            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> update(@PathVariable Long id, @RequestBody ProductoRequestDTO productoRequestDTO) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProductoRequestDTO productoRequestDTO) {
         try{
             ProductoResponseDTO productoResponseDTO = productoService.update(id, productoRequestDTO);
             return ResponseEntity.ok(productoResponseDTO);
         } catch (ServiceException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try{
-            productoService.delete(id);
-            return ResponseEntity.ok().build();
-        } catch (ServiceException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<?> delete(@PathVariable Long id) {
+//        try{
+//            productoService.delete(id);
+//            return ResponseEntity.ok().build();
+//        } catch (ServiceException e) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
 
 }
