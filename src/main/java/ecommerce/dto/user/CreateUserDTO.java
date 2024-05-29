@@ -11,6 +11,7 @@ public record CreateUserDTO(
         @Email
         @NotBlank
         String email,
+        @NotBlank
         String password
 ) {
 }

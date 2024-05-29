@@ -1,9 +1,9 @@
 package ecommerce.dto.categoria;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 public record CategoriaRequestDTO(
-        @NotNull
+        @NotBlank
         String nombre
 ) {
 }

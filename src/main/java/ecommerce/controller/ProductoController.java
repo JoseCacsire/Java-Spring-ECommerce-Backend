@@ -4,6 +4,7 @@ import ecommerce.dto.producto.ProductoRequestDTO;
 import ecommerce.dto.producto.ProductoResponseDTO;
 import ecommerce.service.CategoriaService;
 import ecommerce.service.ProductoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.http.HttpStatus;
@@ -16,46 +17,29 @@ import org.springframework.web.bind.annotation.*;
 public class ProductoController {
 
     private final ProductoService productoService;
-    private final CategoriaService categoriaService;
 
+    @PostMapping()
+    public ResponseEntity<ProductoResponseDTO> save(@RequestBody @Valid ProductoRequestDTO productoRequestDTO) {
+            ProductoResponseDTO productoResponseDTO = productoService.save(productoRequestDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(productoResponseDTO);
+    }
     @GetMapping()
     public ResponseEntity<Iterable<ProductoResponseDTO>> findAll() {
-        try{
             Iterable<ProductoResponseDTO> productos = productoService.findAll();
             return ResponseEntity.ok(productos);
-        } catch (ServiceException e) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductoResponseDTO> findById(@PathVariable Long id) {
-        try{
             ProductoResponseDTO producto = productoService.findById(id);
             return ResponseEntity.ok(producto);
-        } catch (ServiceException e) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 
-    @PostMapping()
-    public ResponseEntity<?> save(@RequestBody ProductoRequestDTO productoRequestDTO) {
-        try{
-            ProductoResponseDTO productoResponseDTO = productoService.save(productoRequestDTO);
-            return ResponseEntity.ok(productoResponseDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProductoRequestDTO productoRequestDTO) {
-        try{
             ProductoResponseDTO productoResponseDTO = productoService.update(id, productoRequestDTO);
             return ResponseEntity.ok(productoResponseDTO);
-        } catch (ServiceException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
     }
 
 

@@ -25,9 +25,9 @@ import java.io.IOException;
 @Slf4j
 public class JwtTokenValidator extends OncePerRequestFilter {
 
-    private UserDetailServiceImpl userDetailService;//vamos a necesitar consultar el usuario en la BD
+    private final UserDetailServiceImpl userDetailService;//vamos a necesitar consultar el usuario en la BD
 
-    private JwtUtils jwtUtils;
+    private final JwtUtils jwtUtils;
 
 
     public JwtTokenValidator(JwtUtils jwtUtils, UserDetailServiceImpl userDetailService) {

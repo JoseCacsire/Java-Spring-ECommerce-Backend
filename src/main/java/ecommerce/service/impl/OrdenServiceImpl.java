@@ -4,6 +4,7 @@ import ecommerce.dto.detail.OrdenDetailRequestDTO;
 import ecommerce.dto.detail.OrdenDetailUpdateRequest;
 import ecommerce.dto.orden.OrdenRequestDTO;
 import ecommerce.dto.orden.OrdenResponseDTO;
+import ecommerce.exceptions.BussinesException;
 import ecommerce.model.*;
 import ecommerce.repository.OrdenDetalleRepository;
 import ecommerce.repository.OrdenRepository;
@@ -14,6 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,18 +39,22 @@ public class OrdenServiceImpl implements OrdenService {
     private UserEntityRepository userEntityRepository;
 
     @Override
+    public List<OrdenResponseDTO> findAll() {
+        List<OrdenResponseDTO> ordenes = ordenRepository.findAll().stream()
+                .map(OrdenResponseDTO::new)
+                .toList();
+        if (ordenes.isEmpty()){
+            throw new BussinesException("No hay registros de ordenes en el sistema", HttpStatus.NOT_FOUND);
+        }
+        return ordenes;
+    }
+    @Override
     public List<OrdenResponseDTO> findByEstado(String estado) {
         return ordenRepository.findByEstado(estado).stream()
                 .map(OrdenResponseDTO::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    @Override
-    public List<OrdenResponseDTO> findAll() {
-        return ordenRepository.findAll().stream()
-                .map(OrdenResponseDTO::new)
-                .collect(Collectors.toList());
-    }
 
     @Override
     public OrdenResponseDTO findById(Long id) {
@@ -98,8 +104,6 @@ public class OrdenServiceImpl implements OrdenService {
         ordenDetailList.forEach(ordenDetail -> {
             ordenDetail.setOrden(ordenSaved);
             ordenDetalleRepository.save(ordenDetail);
-            //cuando al roden haya sido pagada
-//            this.actualizarStock(ordenDetail);
         });
 
         return new OrdenResponseDTO(ordenSaved);

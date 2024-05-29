@@ -2,6 +2,7 @@ package ecommerce.service;
 
 import ecommerce.dto.orden.OrdenRequestDTO;
 import ecommerce.dto.orden.OrdenResponseDTO;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -12,9 +13,8 @@ public interface OrdenService {
     OrdenResponseDTO createOrden(OrdenRequestDTO ordenRequestDTODTO);
 
     OrdenResponseDTO realizarOrden(Long id);
-//    OrdenResponseDTO updateDetail(Long orderId, Long detailId, OrdenDetailUpdateRequest updatedRequest);
     void delete(Long id);
-
+    @Query("SELECT o FROM Orden o WHERE o.estado LIKE %:estado%") //funciona con mysql no h2,ignora (tildes,mayusculas e minusculas)
     List<OrdenResponseDTO> findByEstado(String estado);
 
 }

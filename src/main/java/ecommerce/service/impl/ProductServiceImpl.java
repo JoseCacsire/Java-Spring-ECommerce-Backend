@@ -2,6 +2,7 @@ package ecommerce.service.impl;
 
 import ecommerce.dto.producto.ProductoRequestDTO;
 import ecommerce.dto.producto.ProductoResponseDTO;
+import ecommerce.exceptions.BussinesException;
 import ecommerce.model.Categoria;
 import ecommerce.model.Producto;
 import ecommerce.repository.CategoriaRepository;
@@ -12,6 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +30,14 @@ public class ProductServiceImpl implements ProductoService {
 
     @Override
     public List<ProductoResponseDTO> findAll() {
-        return productoRepository.findAll()
+        List<ProductoResponseDTO> products = productoRepository.findAll()
                 .stream()
                 .map(ProductoResponseDTO::new)
-                .collect(Collectors.toList());
+                .toList();
+        if (products.isEmpty()){
+            throw new BussinesException("No hay registros de productos en el sistema", HttpStatus.NOT_FOUND);
+        }
+        return products;
     }
 
     @Override

@@ -3,6 +3,7 @@ package ecommerce.controller;
 import ecommerce.dto.orden.OrdenRequestDTO;
 import ecommerce.dto.orden.OrdenResponseDTO;
 import ecommerce.service.OrdenService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +26,8 @@ public class OrdenController {
         return ResponseEntity.ok(ordenes);
     }
 
-    @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<OrdenResponseDTO>> getOrdenesByEstado(@PathVariable String estado){
+    @GetMapping("/estado")
+    public ResponseEntity<List<OrdenResponseDTO>> getOrdenesByEstado(@RequestParam String estado){
         List<OrdenResponseDTO> ordenesByEstado = ordenService.findByEstado(estado);
         return ResponseEntity.ok(ordenesByEstado);
     }
@@ -41,25 +42,20 @@ public class OrdenController {
 
     // Endpoint para crear una nueva orden
     @PostMapping("/crear")
-    public ResponseEntity<?> createOrden(@RequestBody OrdenRequestDTO ordenRequestDTO) {
-        try{
+    public ResponseEntity<OrdenResponseDTO> createOrden(@RequestBody @Valid OrdenRequestDTO ordenRequestDTO) {
             OrdenResponseDTO nuevaOrden = ordenService.createOrden(ordenRequestDTO);
-            return new ResponseEntity<>(nuevaOrden, HttpStatus.CREATED);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevaOrden);
     }
 
     @PatchMapping("/realizar/{id}")
     public ResponseEntity<?>  realizarOrden(@PathVariable Long id){
-        try {
             OrdenResponseDTO ordenRealizada = ordenService.realizarOrden(id);
-            return new ResponseEntity<>(ordenRealizada,HttpStatus.OK);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
+            return ResponseEntity.ok(ordenRealizada);
     }
 
-
-
 }
+
+/*
+1-Cors
+2-
+ */

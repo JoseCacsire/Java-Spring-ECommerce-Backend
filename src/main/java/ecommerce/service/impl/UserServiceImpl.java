@@ -10,6 +10,7 @@ import ecommerce.repository.RoleRepository;
 import ecommerce.repository.UserEntityRepository;
 import ecommerce.service.UserEntityService;
 import ecommerce.utils.JwtUtils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,22 +27,15 @@ import java.util.HashSet;
 import java.util.Set;
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl  implements UserEntityService {
 
 
-    @Autowired
-    private JwtUtils jwtUtils;
-    @Autowired
-    private UserEntityRepository userRepository;
-
-    @Autowired
-    private  PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private UserDetailsService userDetailsService;
+    private final JwtUtils jwtUtils;
+    private final UserEntityRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
+    private final UserDetailsService userDetailsService;
 
     @Override
     @Transactional

@@ -2,19 +2,18 @@ package ecommerce.service.impl;
 
 import ecommerce.dto.categoria.CategoriaRequestDTO;
 import ecommerce.dto.categoria.CategoriaResponseDTO;
+import ecommerce.exceptions.BussinesException;
 import ecommerce.model.Categoria;
 import ecommerce.repository.CategoriaRepository;
 import ecommerce.service.CategoriaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.service.spi.ServiceException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static java.util.Arrays.stream;
 
 @Service
 @RequiredArgsConstructor
@@ -24,10 +23,15 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     public List<CategoriaResponseDTO> findAll() {
-        return categoriaRepository.findAll()
+
+        List<CategoriaResponseDTO> categories = categoriaRepository.findAll()
                 .stream()
                 .map(CategoriaResponseDTO::new)
-                .collect(Collectors.toList());
+                .toList();
+        if (categories.isEmpty()){
+            throw new BussinesException("No hay registros de categorias en el sistema",HttpStatus.NOT_FOUND);
+        }
+        return categories;
     }
 
     @Override

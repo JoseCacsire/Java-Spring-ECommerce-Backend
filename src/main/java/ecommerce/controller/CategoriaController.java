@@ -3,6 +3,7 @@ package ecommerce.controller;
 import ecommerce.dto.categoria.CategoriaRequestDTO;
 import ecommerce.dto.categoria.CategoriaResponseDTO;
 import ecommerce.service.CategoriaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.http.HttpStatus;
@@ -19,42 +20,26 @@ public class CategoriaController {
 
     @GetMapping()
     public ResponseEntity<Iterable<CategoriaResponseDTO>> findAll() {
-        try{
             Iterable<CategoriaResponseDTO> categorias = categoriaService.findAll();
             return ResponseEntity.ok(categorias);
-        } catch (ServiceException e) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoriaResponseDTO> findById(@PathVariable Long id) {
-        try{
             CategoriaResponseDTO categoria = categoriaService.findById(id);
             return ResponseEntity.ok(categoria);
-        } catch (ServiceException e) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 
-    @PostMapping()
-    public ResponseEntity<?> save(@RequestBody CategoriaRequestDTO categoriaRequestDTO) {
-        try{
+    @PostMapping
+    public ResponseEntity<CategoriaResponseDTO> save(@RequestBody @Valid CategoriaRequestDTO categoriaRequestDTO) {
             CategoriaResponseDTO categoriaResponseDTO = categoriaService.save(categoriaRequestDTO);
-            return ResponseEntity.ok(categoriaResponseDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
+            return ResponseEntity.status(HttpStatus.CREATED).body(categoriaResponseDTO);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody CategoriaRequestDTO categoriaRequestDTO) {
-        try{
+    public ResponseEntity<CategoriaResponseDTO> update(@PathVariable Long id, @RequestBody CategoriaRequestDTO categoriaRequestDTO) {
             CategoriaResponseDTO categoriaResponseDTO = categoriaService.update(id, categoriaRequestDTO);
             return ResponseEntity.ok(categoriaResponseDTO);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
     }
 
 //    @DeleteMapping("/{id}")

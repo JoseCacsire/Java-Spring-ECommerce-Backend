@@ -19,6 +19,7 @@ public record ProductoRequestDTO(
         @NotNull
         @Min(0)
         Integer stock,
+        @NotBlank
         String imagen,
         @NotNull
         Long categoriaId

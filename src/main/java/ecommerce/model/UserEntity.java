@@ -11,13 +11,14 @@ import java.util.Set;
 @Getter
 @Setter
 @Builder
-@Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "users")
 public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false , unique = true)
     private Long id;
 
     private String username;
@@ -28,8 +29,8 @@ public class UserEntity {
 
     private Boolean estado;
 
-    @OneToMany(mappedBy = "userEntity")
     @JsonIgnore
+    @OneToMany(mappedBy = "userEntity")
     private List<Orden> ordenList;
 
     @ManyToMany(fetch = FetchType.EAGER,targetEntity = RoleEntity.class,cascade = CascadeType.PERSIST)
